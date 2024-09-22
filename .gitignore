@@ -1,0 +1,6 @@
+wandb/
+__pycache__/
+f-mnist/artifacts/
+f-mnist/data/
+f-mnist/prep_data/
+f-mnist/model.pth
