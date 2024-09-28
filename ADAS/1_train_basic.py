@@ -1,6 +1,6 @@
 import wandb
 import pandas as pd
-import params
+from params import WANDB_ENTITY, WANDB_PROJECT, BDD_CLASSES, RAW_DATA_AT, PROCESSED_DATA_AT_V1, PROCESSED_DATA_AT_V2, PROCESSED_DATA_AT_V3
 from fastai.vision.all import *
 from fastai.callback.wandb import WandbCallback
 from types import SimpleNamespace
@@ -11,7 +11,7 @@ from common import label_func
 warnings.filterwarnings('ignore')
 
 def get_data(df, bs=4, img_size=(180, 320), augment=True):
-    block = DataBlock(blocks=(ImageBlock, MaskBlock(codes=params.BDD_CLASSES)),
+    block = DataBlock(blocks=(ImageBlock, MaskBlock(codes=BDD_CLASSES)),
                   get_x=ColReader("image_fname"),
                   get_y=ColReader("label_fname"),
                   splitter=ColSplitter(),
@@ -21,12 +21,12 @@ def get_data(df, bs=4, img_size=(180, 320), augment=True):
     return block.dataloaders(df, bs=bs)
 
 def train(train_config):
-    with wandb.init(entity=params.WANDB_ENTITY, project=params.WANDB_PROJECT, name="train_basic_model", resume=True, job_type="training", config=train_config) as run:
+    with wandb.init(entity=WANDB_ENTITY, project=WANDB_PROJECT, name="train_basic_model", resume=True, job_type="training", config=train_config) as run:
         config = wandb.config
         #################
         # data download #
         #################
-        processed_data_at = run.use_artifact(f'{params.WANDB_ENTITY}/{params.WANDB_PROJECT}/{params.PROCESSED_DATA_AT}:latest', type='split_data')
+        processed_data_at = run.use_artifact(f'{WANDB_ENTITY}/{WANDB_PROJECT}/{PROCESSED_DATA_AT_V1}:latest', type='split_data')
         processed_dataset_dir = Path(processed_data_at.download())
         df = pd.read_csv(processed_dataset_dir / 'data_split.csv')
 
@@ -55,7 +55,7 @@ def train(train_config):
         learn.fit_one_cycle(config.epochs, config.lr, cbs=callbacks)
 
         samples, outputs, predictions = get_predictions(learn)
-        table = create_iou_table(samples, outputs, predictions, params.BDD_CLASSES)
+        table = create_iou_table(samples, outputs, predictions, BDD_CLASSES)
         #############
         # log table #
         #############

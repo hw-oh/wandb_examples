@@ -1,24 +1,21 @@
 import wandb
 import os
-
-
-
 import pandas as pd
-import params
+from params import WANDB_ENTITY, WANDB_PROJECT, BDD_CLASSES, RAW_DATA_AT, PROCESSED_DATA_AT_V1, PROCESSED_DATA_AT_V2, PROCESSED_DATA_AT_V3
 from fastai.vision.all import *
 from fastai.callback.wandb import WandbCallback
 from types import SimpleNamespace
-import os, warnings
+import warnings
 from sklearn.model_selection import StratifiedGroupKFold
 from utils import get_predictions, create_iou_table, MIOU, BackgroundIOU, RoadIOU, TrafficLightIOU, TrafficSignIOU, PersonIOU, VehicleIOU, BicycleIOU
 from common import label_func, get_classes_per_image, _create_table
 
 def download_raw_data(path):
     # Download raw data
-    with wandb.init(entity=params.WANDB_ENTITY, project=params.WANDB_PROJECT, job_type="upload", name="create-raw-data-artifact") as run:
+    with wandb.init(entity=WANDB_ENTITY, project=WANDB_PROJECT, job_type="upload", name="create-raw-data-artifact") as run:
 
         # log data with Artifacts
-        raw_data_at = wandb.Artifact(params.RAW_DATA_AT,
+        raw_data_at = wandb.Artifact(RAW_DATA_AT,
                                     type="raw_data",
                                     metadata={
                                         "url": 'https://storage.googleapis.com/wandb_course/bdd_simple_1k.zip',
@@ -30,16 +27,16 @@ def download_raw_data(path):
         # Visualize data with Tables
         image_files = get_image_files(path/"images", recurse=False)
         if DEBUG: image_files = image_files[:10]
-        table = _create_table(image_files, params.BDD_CLASSES)
+        table = _create_table(image_files, BDD_CLASSES)
         raw_data_at.add(table, "eda_table")
         run.log_artifact(raw_data_at)
 
 def preprocess(path):
-    for PROCESSED_DATA_AT in [params.PROCESSED_DATA_AT_V1, params.PROCESSED_DATA_AT_V2, params.PROCESSED_DATA_AT_V3]:
-        with wandb.init(entity=params.WANDB_ENTITY, project=params.WANDB_PROJECT, job_type="data_split", name=f"create-{PROCESSED_DATA_AT}") as run:
+    for PROCESSED_DATA_AT in [PROCESSED_DATA_AT_V1, PROCESSED_DATA_AT_V2, PROCESSED_DATA_AT_V3]:
+        with wandb.init(entity=WANDB_ENTITY, project=WANDB_PROJECT, job_type="data_split", name=f"create-{PROCESSED_DATA_AT}") as run:
             ## Data Preparation
             # data download
-            raw_data_at = run.use_artifact(f'{params.WANDB_ENTITY}/{params.WANDB_PROJECT}/{params.RAW_DATA_AT}:latest')
+            raw_data_at = run.use_artifact(f'{WANDB_ENTITY}/{WANDB_PROJECT}/{RAW_DATA_AT}:latest')
             path = Path(raw_data_at.download())
 
             fnames = os.listdir(path/'images')
