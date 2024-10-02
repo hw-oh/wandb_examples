@@ -20,13 +20,13 @@ def get_data(df, bs=4, img_size=(180, 320), augment=True):
                  )
     return block.dataloaders(df, bs=bs)
 
-def train(train_config):
+def train():
     with wandb.init(entity=params.WANDB_ENTITY, project=params.WANDB_PROJECT, name="train_basic_model", resume=True, job_type="training", config=train_config) as run:
         config = wandb.config
         #################
         # data download #
         #################
-        processed_data_at = run.use_artifact(f'{params.WANDB_ENTITY}/{params.WANDB_PROJECT}/{params.PROCESSED_DATA_AT}:latest', type='split_data')
+        processed_data_at = run.use_artifact(f'{params.WANDB_ENTITY}/{params.WANDB_PROJECT}/{params.PROCESSED_DATA_AT_V1}:latest', type='split_data')
         processed_dataset_dir = Path(processed_data_at.download())
         df = pd.read_csv(processed_dataset_dir / 'data_split.csv')
 
